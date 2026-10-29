@@ -1,0 +1,92 @@
+import { VenueProfile } from './types';
+
+export const VENUE_PRESETS: VenueProfile[] = [
+  {
+    id: 'auditorium',
+    name: 'Keynote Auditorium',
+    category: 'Stage',
+    description: '5500K Cold White Wash Spotlights, High-Intensity 800 Lux with High-Definition Camera Sensors.',
+    kelvin: 5500,
+    lux: 850,
+    cri: 74,
+    sensorExposure: 0.8,
+    recommendedGarment: {
+      type: 'Executive Peak Lapel Blazer',
+      label: 'Sapphire Matte Wool (Anti-Glare)',
+      colorHex: '#14223D',
+      fabricFinish: 'matte_wool',
+      antiGlareIndex: 94,
+    },
+  },
+  {
+    id: 'candlelight_bistro',
+    name: 'Intimate Candlelit Bistro',
+    category: 'Hospitality',
+    description: '2100K Warm Filament & Candle Flame, Low-Lux 80 Lux, High Yellow-Orange Saturation.',
+    kelvin: 2100,
+    lux: 75,
+    cri: 95,
+    sensorExposure: -0.5,
+    recommendedGarment: {
+      type: 'Structured Draped Cocktail Top',
+      label: 'Deep Emerald Matte Crepe',
+      colorHex: '#0A3B2B',
+      fabricFinish: 'anti_glare_crepe',
+      antiGlareIndex: 82,
+    },
+  },
+  {
+    id: 'executive_webcam',
+    name: 'Executive Studio & Ring Light',
+    category: 'Digital',
+    description: '5000K Cool LED Ring Light directly on face, 450 Lux, 4K Web Sensor with Auto-White Balance.',
+    kelvin: 5000,
+    lux: 480,
+    cri: 80,
+    sensorExposure: 0.3,
+    recommendedGarment: {
+      type: 'Sharp Modern Tailored Jacket',
+      label: 'Graphite Charcoal Heavy Twill',
+      colorHex: '#262930',
+      fabricFinish: 'heavy_twill',
+      antiGlareIndex: 91,
+    },
+  },
+  {
+    id: 'overcast_daylight',
+    name: 'Overcast Outdoor Natural',
+    category: 'Outdoor',
+    description: '6500K Diffuse Daylight Sky, 1400 Lux, High Color Rendering Ra 98.',
+    kelvin: 6500,
+    lux: 1400,
+    cri: 98,
+    sensorExposure: 0.0,
+    recommendedGarment: {
+      type: 'Open-Front Casual Blazer',
+      label: 'Terracotta Anti-Reflect Linen',
+      colorHex: '#8C4836',
+      fabricFinish: 'matte_wool',
+      antiGlareIndex: 88,
+    },
+  },
+  {
+    id: 'ballroom_reception',
+    name: 'Gala Ballroom Reception',
+    category: 'Hospitality',
+    description: '2800K Chandelier Tungsten + Dim Architectural Up-Lighting, 220 Lux.',
+    kelvin: 2800,
+    lux: 220,
+    cri: 88,
+    sensorExposure: -0.2,
+    recommendedGarment: {
+      type: 'Evening Tuxedo Shawl',
+      label: 'Midnight Obsidian Velvet Crepe',
+      colorHex: '#111319',
+      fabricFinish: 'anti_glare_crepe',
+      antiGlareIndex: 96,
+    },
+  },
+];
+
+// High-resolution royalty-free demo portrait with neutral lighting
+export const DEFAULT_DEMO_PORTRAIT = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=85';
