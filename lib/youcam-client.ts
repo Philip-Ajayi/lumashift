@@ -232,6 +232,8 @@ export class YouCamClient {
     return taskId;
   }
 
+  // FILE: lib/youcam-client.ts
+
   /**
    * Polls task status across any YouCam task endpoint until finished or failed
    */
@@ -249,21 +251,28 @@ export class YouCamClient {
     }
 
     const data = await res.json();
-    const status = (
-      data.task_status ||
-      data.status ||
-      data.data?.task_status ||
-      data.data?.status ||
-      ''
-    ).toLowerCase();
 
-    // Fix Bug 2: Check all locations where Perfect Corp delivers download URL
+    // 1. Ensure we only read string status values (data.status is often the number 200)
+    const rawStatus =
+      (typeof data.data?.task_status === 'string' && data.data.task_status) ||
+      (typeof data.task_status === 'string' && data.task_status) ||
+      (typeof data.data?.status === 'string' && data.data.status) ||
+      (typeof data.status === 'string' && data.status) ||
+      '';
+
+    const status = rawStatus.toLowerCase();
+
+    // 2. Handle results whether Perfect Corp returns an array or an object
+    const results = data.data?.results ?? data.results;
+    const firstResult = Array.isArray(results) ? results[0] : results;
+
     const resultUrl =
-      data.data?.results?.[0]?.download_url ||
-      data.data?.results?.[0]?.url ||
-      data.results?.[0]?.download_url ||
-      data.results?.[0]?.url ||
+      firstResult?.download_url ||
+      firstResult?.url ||
+      data.data?.download_url ||
+      data.data?.url ||
       data.task_result?.result_url ||
+      data.data?.task_result?.result_url ||
       data.result_url ||
       data.data?.result_url;
 
@@ -284,4 +293,3 @@ export class YouCamClient {
 
     return { status: 'running' };
   }
-}
