@@ -12,7 +12,6 @@ export class YouCamClient {
 
   constructor(customKey?: string) {
     this.apiKey = (customKey || process.env.YOUCAM_API_KEY || '').trim();
-    // Default base URL for Perfect Corp S2S API
     this.endpoint = (process.env.YOUCAM_ENDPOINT || 'https://yce.makeupar.com').replace(/\/+$/, '');
   }
 
@@ -21,13 +20,12 @@ export class YouCamClient {
   }
 
   /**
-   * Uploads an image directly via Perfect Corp's File API using S3 presigned PUT.
-   * This allows local uploads and webcam snaps to work without needing a public domain.
+   * Uploads an image binary directly to YouCam S2S File API (Presigned S3 PUT)
    */
   public async uploadImageBinary(imageBuffer: Buffer, contentType: string = 'image/jpeg'): Promise<string> {
-    const fileName = `lumashift_${Date.now()}.${contentType.includes('png') ? 'png' : 'jpg'}`;
+    const fileName = `portrait_${Date.now()}.${contentType.includes('png') ? 'png' : 'jpg'}`;
 
-    // Step 1: Request presigned S3 upload URL from Perfect Corp
+    // Step 1: Request S3 upload URL from Perfect Corp
     const initRes = await fetch(`${this.endpoint}/s2s/v2.0/file`, {
       method: 'POST',
       headers: {
@@ -47,16 +45,16 @@ export class YouCamClient {
 
     if (!initRes.ok) {
       const err = await initRes.text();
-      throw new Error(`File API registration failed (${initRes.status}): ${err}`);
+      throw new Error(`YouCam File API initialization failed (${initRes.status}): ${err}`);
     }
 
     const initData = await initRes.json();
     const fileItem = initData.files?.[0] || initData.data?.files?.[0];
     if (!fileItem?.requests?.url || !fileItem?.file_id) {
-      throw new Error('Invalid response from Perfect Corp File API (missing upload URL or file_id)');
+      throw new Error('YouCam File API did not return an upload URL or file_id');
     }
 
-    // Step 2: Directly upload image binary to Perfect Corp's presigned S3 target
+    // Step 2: Stream binary bytes directly to Perfect Corp's presigned storage target
     const uploadRes = await fetch(fileItem.requests.url, {
       method: fileItem.requests.method || 'PUT',
       headers: {
@@ -73,43 +71,61 @@ export class YouCamClient {
   }
 
   /**
-   * Dispatches task to Perfect Corp Makeup VTO API using registered file_id or public URL.
+   * Dispatches task to Perfect Corp Makeup Virtual Try-On endpoint (/s2s/v2.0/task/makeup-vto)
    */
   public async createMakeupTask(
     imageIdentifier: { fileId?: string; imageUrl?: string },
     compensation: ChromaticCompensation
   ): Promise<string> {
+    const lipFinish =
+      compensation.lip.texture === 'gloss'
+        ? 'gloss'
+        : compensation.lip.texture === 'matte'
+        ? 'matte'
+        : 'satin';
+
+    const effects: any[] = [
+      {
+        category: 'foundation',
+        color: compensation.foundation.hex,
+        colorIntensity: compensation.foundation.coverage,
+        glowIntensity: compensation.foundation.glow,
+        coverageIntensity: compensation.foundation.coverage,
+      },
+      {
+        category: 'lip_color',
+        finish: lipFinish,
+        palettes: [
+          {
+            color: compensation.lip.hex,
+            intensity: compensation.lip.intensity,
+          },
+        ],
+      },
+      {
+        category: 'blush',
+        finish: 'satin',
+        palettes: [
+          {
+            color: compensation.blush.hex,
+            intensity: compensation.blush.intensity,
+          },
+        ],
+      },
+    ];
+
     const payload: Record<string, any> = {
-      effects: [
-        {
-          feature: 'foundation',
-          color: compensation.foundation.hex,
-          intensity: compensation.foundation.coverage,
-          glow: compensation.foundation.glow,
-        },
-        {
-          feature: 'lip_color',
-          color: compensation.lip.hex,
-          texture: compensation.lip.texture,
-          intensity: compensation.lip.intensity,
-        },
-        {
-          feature: 'blush',
-          color: compensation.blush.hex,
-          intensity: compensation.blush.intensity,
-        },
-      ],
+      version: '1.0',
+      effects,
     };
 
     if (imageIdentifier.fileId) {
       payload.file_id = imageIdentifier.fileId;
+      payload.src_file_id = imageIdentifier.fileId;
     } else if (imageIdentifier.imageUrl) {
       payload.src_file_url = imageIdentifier.imageUrl;
-    } else {
-      throw new Error('Either fileId or imageUrl must be provided');
     }
 
-    // Standard Perfect Corp S2S Makeup Try-On task endpoint
     const res = await fetch(`${this.endpoint}/s2s/v2.0/task/makeup-vto`, {
       method: 'POST',
       headers: {
@@ -121,20 +137,20 @@ export class YouCamClient {
 
     if (!res.ok) {
       const errBody = await res.text();
-      throw new Error(`YouCam Makeup Task Dispatch Error (${res.status}): ${errBody}`);
+      throw new Error(`YouCam Makeup Task Creation Error (${res.status}): ${errBody}`);
     }
 
     const data = await res.json();
     const taskId = data.task_id || data.data?.task_id;
     if (!taskId) {
-      throw new Error(`No task_id returned: ${JSON.stringify(data)}`);
+      throw new Error(`YouCam returned no task_id: ${JSON.stringify(data)}`);
     }
 
     return taskId;
   }
 
   /**
-   * Polls task status until finished or failed.
+   * Polls task status until finished or failed
    */
   public async checkTaskStatus(taskId: string): Promise<YouCamTaskResult> {
     const res = await fetch(`${this.endpoint}/s2s/v2.0/task/makeup-vto/${taskId}`, {
@@ -156,7 +172,7 @@ export class YouCamClient {
     if (status === 'error' || status === 'failed') {
       return {
         status: 'failed',
-        error: data.error_message || data.error || 'YouCam GPU rendering failure',
+        error: data.error_message || data.error || data.task_result?.error || 'YouCam GPU task failed',
       };
     }
 
