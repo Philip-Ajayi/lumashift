@@ -1,3 +1,5 @@
+import { LipTexture } from './types';
+
 /**
  * Optical Physics & Blackbody Chromatic Locus Mathematical Engine
  * Implements Tanner-Kelvin approximations, Planckian spectral locus,
@@ -39,7 +41,7 @@ export function kelvinToRGB(kelvin: number): RGB {
     g = Math.max(0, Math.min(255, g));
   } else {
     g = temp - 60;
-    g = 288.1221695283 * Math.pow(g, -0.0755148492);
+    r = 288.1221695283 * Math.pow(g, -0.0755148492);
     g = Math.max(0, Math.min(255, g));
   }
 

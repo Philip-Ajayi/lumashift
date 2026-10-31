@@ -60,7 +60,7 @@ export class YouCamClient {
       headers: {
         'Content-Type': contentType,
       },
-      body: imageBuffer,
+      body: new Uint8Array(imageBuffer) as unknown as BodyInit,
     });
 
     if (!uploadRes.ok) {

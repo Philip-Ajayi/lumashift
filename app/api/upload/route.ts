@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
   }
 
   const fileData = uploadCache.get(id)!;
-  return new NextResponse(fileData.buffer, {
+  return new NextResponse(new Uint8Array(fileData.buffer) as unknown as BodyInit, {
     headers: {
       'Content-Type': fileData.contentType,
       'Cache-Control': 'public, max-age=1800',
