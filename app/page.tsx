@@ -106,8 +106,8 @@ export default function LumaShiftStudio() {
     }
   };
 
-  const pollCloudResult = async (taskId: string, apiKey?: string) => {
-    const maxAttempts = 20;
+  const pollCloudResult = async (taskId: string, apiKey?: string, taskType: string = 'makeup-vto') => {
+    const maxAttempts = 25;
     for (let i = 0; i < maxAttempts; i++) {
       await new Promise(r => setTimeout(r, 2000));
       setCalibrationStatus(`YouCam GPU Rendering (${(i + 1) * 2}s)...`);
@@ -115,7 +115,7 @@ export default function LumaShiftStudio() {
       const pollRes = await fetch('/api/calibrate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'poll', taskId, apiKey }),
+        body: JSON.stringify({ action: 'poll', taskId, apiKey, taskType }),
       });
 
       const pollData = await pollRes.json();

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ChromaticAgent } from '@/lib/chromatic-agent';
-import { YouCamClient } from '@/lib/youcam-client';
+import { YouCamClient, YouCamTaskType } from '@/lib/youcam-client';
 import { VenueProfile } from '@/lib/types';
 import { VENUE_PRESETS } from '@/lib/sample-data';
 
@@ -9,8 +9,8 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { action, taskId, imageUrl, imageBase64, venueId, customVenue, apiKey } = body;
-    const client = new YouCamClient(apiKey);
+    const { action, taskId, taskType = 'makeup-vto', imageUrl, imageBase64, venueId, customVenue, apiKey, endpoint } = body;
+    const client = new YouCamClient(apiKey, endpoint);
 
     // -------------------------------------------------------------
     // ACTION 1: Check existing task status (Client polling)
@@ -19,12 +19,12 @@ export async function POST(req: NextRequest) {
       if (!client.hasCredentials()) {
         return NextResponse.json({ error: 'Missing YouCam API credentials' }, { status: 401 });
       }
-      const statusRes = await client.checkTaskStatus(taskId);
+      const statusRes = await client.checkTaskStatus(taskId, taskType as YouCamTaskType);
       return NextResponse.json(statusRes);
     }
 
     // -------------------------------------------------------------
-    // ACTION 2: Enforce Real API Credentials (No Mock/Fallback)
+    // ACTION 2: Enforce Real API Credentials
     // -------------------------------------------------------------
     if (!client.hasCredentials()) {
       return NextResponse.json(
@@ -87,12 +87,13 @@ export async function POST(req: NextRequest) {
       success: true,
       mode: 'real_youcam_api',
       taskId: taskIdFromYouCam,
+      taskType: 'makeup-vto',
       venueProfile: venue,
       compensation,
       telemetry: {
         step: 'YouCam Cloud Task Dispatched',
         status: 'ok',
-        detail: `Task ${taskIdFromYouCam} registered on Perfect Corp GPU cluster.`,
+        detail: `Task ${taskIdFromYouCam} registered on Perfect Corp GPU cluster (/s2s/v2.0/task/makeup-vto).`,
       },
     });
   } catch (error: any) {
