@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState, useRef, useCallback } from 'react';
 import { VenueProfile, ChromaticCompensation } from '@/lib/types';
-import { Sliders, Sun, ShieldAlert, Sparkles, Loader2 } from 'lucide-react';
+import { SlidersHorizontal, Sun, Loader2, Sparkles } from 'lucide-react';
 
 interface DualSplitSliderProps {
   sourceImage: string;
@@ -28,107 +29,127 @@ export const DualSplitSlider: React.FC<DualSplitSliderProps> = ({
   const handlePointerDown = () => {
     isDragging.current = true;
   };
+
   const handlePointerUp = () => {
     isDragging.current = false;
   };
 
-  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging.current || !containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
-    setSliderPos((x / rect.width) * 100);
-  }, []);
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!isDragging.current || !containerRef.current) return;
+
+      const rect = containerRef.current.getBoundingClientRect();
+      const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+
+      setSliderPos((x / rect.width) * 100);
+    },
+    []
+  );
 
   const hasResult = calibratedImage && calibratedImage !== sourceImage;
 
   return (
-    <div className="relative flex flex-col gap-3">
-      {/* Header */}
-      <div className="flex items-center justify-between text-xs text-zinc-400">
-        <div className="flex items-center gap-1.5 text-rose-400 font-medium">
-          <ShieldAlert className="w-3.5 h-3.5" />
-          <span>LEFT: Original Uncalibrated Portrait</span>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <p className="eyebrow mb-2">Your preview</p>
+          <h2 className="text-[22px] sm:text-[28px] font-medium tracking-[-0.05em]">
+            The difference is in the light.
+          </h2>
         </div>
-        <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>RIGHT: Live YouCam S2S AI Output</span>
-        </div>
+
+        <span className="hidden sm:flex items-center gap-2 text-[10px] text-zinc-400 pb-1">
+          <SlidersHorizontal className="w-3.5 h-3.5" />
+          Drag to compare
+        </span>
       </div>
 
-      {/* Split Viewer */}
       <div
         ref={containerRef}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
         onPointerMove={handlePointerMove}
-        className="relative w-full aspect-[4/5] sm:aspect-[16/11] max-h-[640px] rounded-2xl overflow-hidden select-none cursor-ew-resize border border-white/10 shadow-2xl bg-black"
+        className="comparison-shell w-full aspect-[4/5] sm:aspect-[4/4.2] max-h-[720px] select-none cursor-ew-resize touch-pan-y"
       >
-        {/* Layer 1: Left - Original Uncalibrated Photo */}
-        <div className="absolute inset-0 w-full h-full">
+        <div className="absolute inset-0">
           <img
             src={sourceImage}
-            alt="Original Portrait"
-            className="w-full h-full object-cover"
+            alt="Your original photo"
+            className="comparison-image"
+            draggable={false}
           />
-          <div className="absolute top-4 left-4 z-10 px-3 py-1.5 rounded-lg bg-black/75 backdrop-blur-md border border-rose-500/30 text-rose-300 text-xs font-mono">
-            Original Input
+
+          <div className="absolute top-4 left-4 z-10 comparison-label">
+            Original
           </div>
         </div>
 
-        {/* Layer 2: Right - Live YouCam Result */}
         <div
-          className="absolute inset-0 w-full h-full overflow-hidden"
-          style={{ clipPath: `polygon(${sliderPos}% 0%, 100% 0%, 100% 100%, ${sliderPos}% 100%)` }}
+          className="absolute inset-0 overflow-hidden"
+          style={{
+            clipPath: `polygon(${sliderPos}% 0%, 100% 0%, 100% 100%, ${sliderPos}% 100%)`,
+          }}
         >
           {hasResult ? (
             <img
               src={calibratedImage}
-              alt="YouCam Live Result"
-              className="w-full h-full object-cover"
+              alt="Your appearance under the selected lighting"
+              className="comparison-image"
+              draggable={false}
             />
           ) : (
-            <div className="w-full h-full bg-zinc-950 flex flex-col items-center justify-center p-6 text-center text-zinc-400">
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 bg-[#18181a]">
               {isCalibrating ? (
                 <>
-                  <Loader2 className="w-8 h-8 animate-spin text-blue-400 mb-3" />
-                  <p className="text-sm font-semibold text-white">{calibrationStatus}</p>
-                  <p className="text-xs text-zinc-500 mt-1">Perfect Corp GPU cluster is rendering your try-on...</p>
+                  <Loader2 className="w-8 h-8 text-[#c9b28a] animate-spin mb-5" />
+                  <p className="text-sm font-medium text-white">
+                    {calibrationStatus}
+                  </p>
+                  <p className="text-xs text-zinc-500 mt-2 max-w-[240px] leading-6">
+                    Your new preview is on its way.
+                  </p>
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-8 h-8 text-blue-400/50 mb-2" />
-                  <p className="text-sm text-zinc-300">Click &quot;Calibrate Appearance&quot; to run YouCam S2S Virtual Try-On.</p>
+                  <Sparkles className="w-7 h-7 text-[#c9b28a] mb-4" />
+                  <p className="text-sm text-zinc-200">
+                    Your new look will appear here.
+                  </p>
+                  <p className="text-xs text-zinc-500 mt-2 leading-6">
+                    Choose your lighting and start a preview.
+                  </p>
                 </>
               )}
             </div>
           )}
 
-          <div className="absolute top-4 right-4 z-10 px-3 py-1.5 rounded-lg bg-black/75 backdrop-blur-md border border-emerald-500/30 text-emerald-300 text-xs font-mono flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>YouCam S2S Render</span>
+          <div className="absolute top-4 right-4 z-10 comparison-label">
+            New lighting
           </div>
         </div>
 
-        {/* Slider Divider Bar */}
         <div
-          className="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_12px_rgba(255,255,255,0.8)] pointer-events-none"
+          className="absolute top-0 bottom-0 comparison-divider pointer-events-none"
           style={{ left: `${sliderPos}%` }}
         >
-          <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-white text-black flex items-center justify-center shadow-xl">
-            <Sliders className="w-4 h-4 rotate-90" />
+          <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 comparison-handle flex items-center justify-center">
+            <SlidersHorizontal className="w-4 h-4 rotate-90" />
           </div>
         </div>
       </div>
 
-      {/* Target Venue Specs */}
-      <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-surface border border-white/5 text-xs text-zinc-400">
-        <div className="flex items-center gap-2">
-          <Sun className="w-4 h-4 text-amber-400" />
-          <span>Destination Illuminant: <strong className="text-white">{venue.kelvin}K</strong></span>
+      <div className="flex items-center justify-between gap-3 px-1">
+        <div className="flex items-center gap-2 text-xs text-zinc-400">
+          <Sun className="w-3.5 h-3.5 text-[#c9b28a]" />
+          <span>{venue.name}</span>
         </div>
-        <div>Lux: <strong className="text-white">{venue.lux} lx</strong></div>
-        <div>CRI Ra: <strong className="text-white">{venue.cri}</strong></div>
-        <div className="text-blue-400 font-mono">Drag slider to compare</div>
+
+        <div className="flex items-center gap-3 text-[10px] text-zinc-500 font-mono">
+          <span>{venue.kelvin}K</span>
+          <span>{venue.lux} lx</span>
+          <span>Ra {venue.cri}</span>
+        </div>
       </div>
     </div>
   );

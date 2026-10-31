@@ -1,119 +1,143 @@
+
 'use client';
 
 import React from 'react';
 import { ChromaticCompensation } from '@/lib/types';
-import { Layers, ShieldAlert, Sparkles, Check, Shirt } from 'lucide-react';
+import { Layers, Shirt, Sparkles, ShieldAlert } from 'lucide-react';
 
 interface MakeupApparelInspectorProps {
   compensation: ChromaticCompensation;
 }
 
-export const MakeupApparelInspector: React.FC<MakeupApparelInspectorProps> = ({
-  compensation,
-}) => {
-  const { foundation, lip, contour, apparel, diagnostics } = compensation;
+export const MakeupApparelInspector: React.FC<
+  MakeupApparelInspectorProps
+> = ({ compensation }) => {
+  const { foundation, lip, apparel, diagnostics } = compensation;
 
   return (
-    <div className="flex flex-col gap-4 p-5 rounded-2xl bg-surface border border-white/10">
-      <div>
-        <h3 className="text-sm font-semibold text-white tracking-wide uppercase flex items-center gap-2">
-          <Layers className="w-4 h-4 text-blue-400" />
-          <span>2. Parametric Formulation & Apparel Matrix</span>
-        </h3>
-        <p className="text-xs text-zinc-400 mt-1">
-          Exact YouCam REST API payload dispatched to neutralize optical color shift.
-        </p>
-      </div>
-
-      {/* Foundation & Lip Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {/* Foundation */}
-        <div className="p-3.5 rounded-xl bg-surface-elevated/60 border border-white/5 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-200">Foundation Calibration</span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-400">
-              {foundation.undertoneShiftDelta > 0 ? `+${foundation.undertoneShiftDelta}% Warmth` : `${foundation.undertoneShiftDelta}% Cool`}
-            </span>
+    <section className="panel">
+      <div className="panel-content">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow mb-2">02 / Appearance</p>
+            <h3 className="section-title">Your look, refined</h3>
+            <p className="section-description mt-2">
+              Colors and finishes suggested for this lighting.
+            </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-lg shadow-inner border border-white/20 shrink-0"
-              style={{ backgroundColor: foundation.hex }}
-            />
-            <div className="text-xs space-y-0.5 font-mono">
-              <div className="text-white font-bold">{foundation.hex}</div>
-              <div className="text-zinc-400 text-[11px]">Coverage: {foundation.coverage}% • Glow: {foundation.glow}%</div>
-            </div>
-          </div>
+          <Layers className="w-4 h-4 text-[#c9b28a]" />
         </div>
 
-        {/* Lipstick */}
-        <div className="p-3.5 rounded-xl bg-surface-elevated/60 border border-white/5 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-200">Lip Formulation</span>
-            <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300">
-              {lip.texture} Finish
-            </span>
-          </div>
+        <div className="space-y-3">
+          <div className="result-card">
+            <div className="flex items-center justify-between mb-4">
+              <span className="result-name">Complexion</span>
+              <span className="text-[10px] text-zinc-500">
+                {foundation.undertoneShiftDelta > 0
+                  ? `+${foundation.undertoneShiftDelta}% warmth`
+                  : `${foundation.undertoneShiftDelta}% cool`}
+              </span>
+            </div>
 
-          <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-lg shadow-inner border border-white/20 shrink-0"
-              style={{ backgroundColor: lip.hex }}
-            />
-            <div className="text-xs space-y-0.5 font-mono">
-              <div className="text-white font-bold">{lip.hex}</div>
-              <div className="text-zinc-400 text-[11px]">
-                Intensity: {lip.intensity}% • Suppr: {lip.specularSuppression}%
+            <div className="flex items-center gap-3">
+              <div
+                className="color-swatch"
+                style={{ backgroundColor: foundation.hex }}
+              />
+
+              <div>
+                <p className="text-xs font-medium text-white">
+                  {foundation.hex}
+                </p>
+                <p className="result-meta mt-1">
+                  Coverage {foundation.coverage}% · Glow {foundation.glow}%
+                </p>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Contour & Anti-Glare Apparel Row */}
-      <div className="p-3.5 rounded-xl bg-surface-elevated/60 border border-white/5 space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Shirt className="w-4 h-4 text-cyan-400" />
-            <span className="text-xs font-semibold text-white">Apparel V3 Anti-Glare Ensemble</span>
+          <div className="result-card">
+            <div className="flex items-center justify-between mb-4">
+              <span className="result-name">Lip color</span>
+              <span className="text-[10px] text-zinc-500">
+                {lip.texture} finish
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div
+                className="color-swatch"
+                style={{ backgroundColor: lip.hex }}
+              />
+
+              <div>
+                <p className="text-xs font-medium text-white">
+                  {lip.hex}
+                </p>
+                <p className="result-meta mt-1">
+                  Intensity {lip.intensity}% · Shine {lip.specularSuppression}%
+                </p>
+              </div>
+            </div>
           </div>
-          <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-            {apparel.antiGlareRating}
-          </span>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg shadow-inner border border-white/20 shrink-0"
-            style={{ backgroundColor: apparel.recommendedHex }}
-          />
-          <div className="text-xs">
-            <div className="text-white font-medium">{apparel.garmentType}</div>
-            <div className="text-zinc-400 text-[11px] font-mono">
-              Finish: {apparel.fabricFinish} • Contrast: {apparel.contrastRatio}
+          <div className="result-card">
+            <div className="flex items-center justify-between mb-4">
+              <span className="result-name">Clothing</span>
+              <Shirt className="w-4 h-4 text-[#c9b28a]" />
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div
+                className="color-swatch"
+                style={{ backgroundColor: apparel.recommendedHex }}
+              />
+
+              <div>
+                <p className="text-xs font-medium text-white">
+                  {apparel.garmentType}
+                </p>
+                <p className="result-meta mt-1">
+                  {apparel.fabricFinish} · {apparel.contrastRatio} contrast
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between">
+              <span className="text-[10px] text-zinc-500">
+                Glare resistance
+              </span>
+              <span className="text-[10px] text-[#a8c7ad]">
+                {apparel.antiGlareRating}
+              </span>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Diagnostic Alert Box */}
-      <div className="p-3 rounded-xl bg-blue-950/30 border border-blue-500/20 text-xs space-y-1">
-        <div className="flex items-center gap-1.5 text-blue-400 font-semibold">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Chromatic Agent Optical Assessment</span>
-        </div>
-        <p className="text-zinc-300 leading-relaxed text-[11px]">
-          {diagnostics.technicalExplanation}
-        </p>
-        {diagnostics.r9DeficiencyWarning && (
-          <div className="flex items-center gap-1 text-amber-400 text-[11px] pt-1">
-            <ShieldAlert className="w-3 h-3" />
-            <span>Low venue CRI detected: Injected +15% peach subcutaneous compensator.</span>
+        <div className="mt-4 rounded-xl bg-white/[0.025] border border-white/[0.06] p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="w-3.5 h-3.5 text-[#c9b28a]" />
+            <span className="text-xs font-medium text-zinc-200">
+              A note on this look
+            </span>
           </div>
-        )}
+
+          <p className="text-[11px] text-zinc-400 leading-6">
+            {diagnostics.technicalExplanation}
+          </p>
+
+          {diagnostics.r9DeficiencyWarning && (
+            <div className="flex gap-2 mt-3 text-[10px] text-amber-300 leading-5">
+              <ShieldAlert className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              <span>
+                Color accuracy is limited in this setting. A warmer complexion
+                adjustment has been applied.
+              </span>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </section>
   );
 };

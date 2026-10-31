@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -29,16 +30,23 @@ export default function LumaShiftStudio() {
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isWebcamOpen, setIsWebcamOpen] = useState<boolean>(false);
 
-  const [customKeys, setCustomKeys] = useState<{ apiKey: string; apiSecret: string } | null>(null);
+  const [customKeys, setCustomKeys] = useState<{
+    apiKey: string;
+    apiSecret: string;
+  } | null>(null);
 
   const agent = new ChromaticAgent();
-  const [compensation, setCompensation] = useState(agent.synthesizeCompensation(VENUE_PRESETS[0]));
+
+  const [compensation, setCompensation] = useState(
+    agent.synthesizeCompensation(VENUE_PRESETS[0])
+  );
+
   const [telemetryLog, setTelemetryLog] = useState<any[]>([
     {
       step: 'System Ready',
       durationMs: 5,
       status: 'ok',
-      detail: 'Perfect Corp S2S Engine initialized. Live production pipeline ready.',
+      detail: 'Appearance preview system initialized.',
     },
   ]);
 
@@ -51,7 +59,8 @@ export default function LumaShiftStudio() {
     setIsCalibrating(true);
     setErrorMessage(null);
     setNeedsApiKey(false);
-    setCalibrationStatus('Initiating YouCam S2S Task...');
+    setCalibrationStatus('Preparing your preview…');
+
     const start = Date.now();
 
     try {
@@ -73,7 +82,8 @@ export default function LumaShiftStudio() {
         if (data.requiresKey || res.status === 401) {
           setNeedsApiKey(true);
         }
-        throw new Error(data.error || 'Server error');
+
+        throw new Error(data.error || 'Something went wrong.');
       }
 
       setCompensation(data.compensation);
@@ -86,11 +96,13 @@ export default function LumaShiftStudio() {
       }
 
       if (data.taskId) {
-        setCalibrationStatus('YouCam GPU rendering in progress...');
+        setCalibrationStatus('Creating your new look…');
+
         await pollCloudResult(data.taskId, overrideKeys?.apiKey);
       }
     } catch (err: any) {
       setErrorMessage(err.message);
+
       setTelemetryLog(prev => [
         ...prev,
         {
@@ -106,11 +118,17 @@ export default function LumaShiftStudio() {
     }
   };
 
-  const pollCloudResult = async (taskId: string, apiKey?: string, taskType: string = 'makeup-vto') => {
+  const pollCloudResult = async (
+    taskId: string,
+    apiKey?: string,
+    taskType: string = 'makeup-vto'
+  ) => {
     const maxAttempts = 25;
+
     for (let i = 0; i < maxAttempts; i++) {
       await new Promise(r => setTimeout(r, 2000));
-      setCalibrationStatus(`YouCam GPU Rendering (${(i + 1) * 2}s)...`);
+
+      setCalibrationStatus(`Creating your preview… ${(i + 1) * 2}s`);
 
       const pollRes = await fetch('/api/calibrate', {
         method: 'POST',
@@ -119,24 +137,29 @@ export default function LumaShiftStudio() {
       });
 
       const pollData = await pollRes.json();
+
       if (pollData.status === 'success' && pollData.resultUrl) {
         setCalibratedImage(pollData.resultUrl);
+
         setTelemetryLog(prev => [
           ...prev,
           {
-            step: 'YouCam Render Returned',
+            step: 'Preview Ready',
             durationMs: (i + 1) * 2000,
             status: 'ok',
-            detail: 'Neural virtual try-on render completed successfully.',
+            detail: 'Your appearance preview is ready.',
           },
         ]);
+
         return;
       }
+
       if (pollData.status === 'failed') {
-        throw new Error(pollData.error || 'Task failed on YouCam GPU cluster');
+        throw new Error(pollData.error || 'The preview could not be created.');
       }
     }
-    throw new Error('YouCam polling timed out.');
+
+    throw new Error('The preview took too long. Please try again.');
   };
 
   const handleSelectPreset = (venue: VenueProfile) => {
@@ -145,21 +168,30 @@ export default function LumaShiftStudio() {
   };
 
   const handleCustomChange = (updated: Partial<VenueProfile>) => {
-    const merged = { ...selectedVenue, ...updated, id: 'custom' as const, name: 'Custom Rig' };
+    const merged = {
+      ...selectedVenue,
+      ...updated,
+      id: 'custom' as const,
+      name: 'Custom lighting',
+    };
+
     setSelectedVenue(merged);
     setCompensation(agent.synthesizeCompensation(merged));
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.[0]) return;
+
     const file = e.target.files[0];
     const reader = new FileReader();
 
     reader.onload = async () => {
       const base64 = reader.result as string;
+
       setRawBase64(base64);
       setSourceImage(base64);
       setCalibratedImage('');
+
       await runCalibration(selectedVenue, base64, base64);
     };
 
@@ -170,56 +202,92 @@ export default function LumaShiftStudio() {
     setRawBase64(capturedBase64);
     setSourceImage(capturedBase64);
     setCalibratedImage('');
+
     await runCalibration(selectedVenue, capturedBase64, capturedBase64);
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background selection:bg-blue-500 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar
         onOpenSettings={() => setIsSettingsOpen(true)}
         onToggleConsole={() => setIsConsoleOpen(prev => !prev)}
         isConsoleOpen={isConsoleOpen}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 flex flex-col gap-6">
-        {/* Missing API Key Banner */}
+      <main className="workspace flex-1">
+        {/* Intro */}
+        <div className="mb-8 sm:mb-10">
+          <p className="eyebrow mb-3">Appearance studio</p>
+
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <h1 className="text-[32px] sm:text-[42px] font-medium tracking-[-0.06em] leading-tight">
+                Every light tells
+                <br className="sm:hidden" /> a different story.
+              </h1>
+
+              <p className="text-xs text-zinc-400 mt-4 leading-6 max-w-lg">
+                See how your complexion, makeup, and clothing look in
+                different lighting before you step out.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 text-[10px] text-zinc-500 pb-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#a8c7ad]" />
+              Appearance workspace
+            </div>
+          </div>
+        </div>
+
+        {/* Missing API key */}
         {needsApiKey && (
-          <div className="p-4 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-200 text-xs flex items-center justify-between shadow-lg">
-            <div className="flex items-center gap-3">
-              <Key className="w-5 h-5 text-amber-400 shrink-0" />
+          <div className="alert alert-warning flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div className="flex items-start gap-3">
+              <Key className="w-4 h-4 shrink-0 mt-1" />
+
               <div>
-                <p className="font-bold text-sm">Perfect Corp API Key Required</p>
-                <p className="text-zinc-300">
-                  To view live virtual try-on renders, add your API key. (Use hackathon voucher: <strong className="text-amber-300">ytmakerthrive</strong> for 500 units)
+                <p className="text-xs font-medium">
+                  Connect Perfect Corp to create live previews
+                </p>
+
+                <p className="text-[11px] mt-1 opacity-80">
+                  Add your API credentials to continue.
                 </p>
               </div>
             </div>
+
             <button
               onClick={() => setIsSettingsOpen(true)}
-              className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs"
+              className="button-secondary !min-h-[36px]"
             >
-              Enter Key
+              Connect account
             </button>
           </div>
         )}
 
-        {/* Error notification banner */}
+        {/* Error notification */}
         {errorMessage && !needsApiKey && (
-          <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0" />
+          <div className="alert alert-error flex items-start justify-between gap-4 mb-6">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{errorMessage}</span>
             </div>
-            <button onClick={() => setErrorMessage(null)} className="text-[11px] underline hover:text-white">
+
+            <button
+              onClick={() => setErrorMessage(null)}
+              className="text-[10px] underline shrink-0"
+            >
               Dismiss
             </button>
           </div>
         )}
 
+        {/* Optional lighting inspiration */}
         <JudgeDemoGuide onLoadScenario={handleSelectPreset} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <div className="lg:col-span-7 flex flex-col gap-4">
+        {/* Main workspace */}
+        <div className="workspace-grid">
+          <div className="workspace-column">
             <DualSplitSlider
               sourceImage={sourceImage}
               calibratedImage={calibratedImage}
@@ -229,56 +297,83 @@ export default function LumaShiftStudio() {
               calibrationStatus={calibrationStatus}
             />
 
-            {/* Action Bar */}
-            <div className="flex flex-wrap items-center justify-between p-3.5 rounded-xl bg-surface border border-white/10 text-xs gap-3">
-              <div className="flex items-center gap-2">
-                {isCalibrating ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
-                    <span className="text-zinc-200 font-medium">{calibrationStatus}</span>
-                  </>
-                ) : (
-                  <span className="text-zinc-400">Test live portrait input:</span>
+            {/* Photo actions */}
+            <div className="panel">
+              <div className="panel-content !py-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-medium text-zinc-200">
+                      Use your own photo
+                    </p>
+
+                    <p className="text-[10px] text-zinc-500 mt-1">
+                      Upload a photo or take one with your camera.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setIsWebcamOpen(true)}
+                      disabled={isCalibrating}
+                      className="button-secondary"
+                    >
+                      <Camera className="w-3.5 h-3.5" />
+                      Take photo
+                    </button>
+
+                    <label className="button-primary !min-h-[42px] cursor-pointer">
+                      <Upload className="w-3.5 h-3.5" />
+                      Upload photo
+
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        disabled={isCalibrating}
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {isCalibrating && (
+                  <div className="flex items-center gap-3 mt-4 pt-4 border-t border-white/[0.06]">
+                    <Loader2 className="w-4 h-4 text-[#c9b28a] animate-spin" />
+
+                    <p className="text-[11px] text-zinc-300">
+                      {calibrationStatus}
+                    </p>
+                  </div>
                 )}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setIsWebcamOpen(true)}
-                  disabled={isCalibrating}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white font-medium transition-colors border border-white/10"
-                >
-                  <Camera className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Live Webcam</span>
-                </button>
-
-                <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white cursor-pointer font-medium transition-colors shadow-lg shadow-blue-600/20">
-                  <Upload className="w-3.5 h-3.5" />
-                  <span>Upload Image</span>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    disabled={isCalibrating}
-                  />
-                </label>
               </div>
             </div>
           </div>
 
-          <div className="lg:col-span-5 flex flex-col gap-6">
+          <div className="workspace-column">
             <VenueControls
               selectedVenue={selectedVenue}
               onSelectPreset={handleSelectPreset}
               onCustomChange={handleCustomChange}
               isCalibrating={isCalibrating}
-              onTriggerCalibration={() => runCalibration(selectedVenue, sourceImage, rawBase64)}
+              onTriggerCalibration={() =>
+                runCalibration(selectedVenue, sourceImage, rawBase64)
+              }
             />
 
             <MakeupApparelInspector compensation={compensation} />
           </div>
         </div>
+
+        {/* Footer */}
+        <footer className="mt-12 pt-5 border-t border-white/[0.06] flex flex-col sm:flex-row justify-between gap-3">
+          <p className="text-[10px] text-zinc-500">
+            LumaShift · Appearance Studio
+          </p>
+
+          <p className="text-[10px] text-zinc-600">
+            Explore your look in a different light.
+          </p>
+        </footer>
       </main>
 
       <WebcamModal
@@ -298,7 +393,9 @@ export default function LumaShiftStudio() {
         onClose={() => setIsSettingsOpen(false)}
         onSaveKeys={(key, secret) => {
           const keys = { apiKey: key, apiSecret: secret };
+
           setCustomKeys(keys);
+
           runCalibration(selectedVenue, sourceImage, rawBase64, keys);
         }}
       />

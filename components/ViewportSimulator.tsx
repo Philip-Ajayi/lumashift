@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useRef, useEffect } from 'react';
@@ -28,33 +29,49 @@ export const ViewportSimulator: React.FC<ViewportSimulatorProps> = ({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     const img = new Image();
 
-    // Only set crossOrigin for remote URLs; data: or blob: will throw a SecurityError in some browsers
-    if (!imageSrc.startsWith('data:') && !imageSrc.startsWith('blob:')) {
+    if (
+      !imageSrc.startsWith('data:') &&
+      !imageSrc.startsWith('blob:')
+    ) {
       img.crossOrigin = 'anonymous';
     }
+
     img.src = imageSrc;
 
     img.onload = () => {
       canvas.width = img.width;
       canvas.height = img.height;
+
       ctx.drawImage(img, 0, 0);
 
       try {
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
         const data = imageData.data;
         const illuminant = kelvinToRGB(kelvin);
+
         const lightFactor = {
           r: illuminant.r / 255,
           g: illuminant.g / 255,
           b: illuminant.b / 255,
         };
 
-        const luxScale = Math.min(1.4, Math.max(0.4, lux / 450));
+        const luxScale = Math.min(
+          1.4,
+          Math.max(0.4, lux / 450)
+        );
+
         const redDrop = cri < 80 ? (80 - cri) * 0.006 : 0;
 
         for (let i = 0; i < data.length; i += 4) {
@@ -64,6 +81,7 @@ export const ViewportSimulator: React.FC<ViewportSimulatorProps> = ({
 
           if (applyCompensation) {
             const compGain = 1 + (foundationShift / 100) * 0.4;
+
             r = r * compGain;
             g = g * (1 + (foundationShift > 0 ? -0.05 : 0.05));
           }
@@ -79,15 +97,17 @@ export const ViewportSimulator: React.FC<ViewportSimulatorProps> = ({
 
         ctx.putImageData(imageData, 0, 0);
       } catch (e) {
-        // Fallback: draw original image if cross-origin restrictions block pixel read
         ctx.drawImage(img, 0, 0);
       }
     };
   }, [imageSrc, kelvin, lux, cri, applyCompensation, foundationShift]);
 
   return (
-    <div className={`relative overflow-hidden rounded-xl bg-black ${className}`}>
-      <canvas ref={canvasRef} className="w-full h-full object-cover rounded-xl" />
+    <div className={`relative overflow-hidden rounded-2xl bg-[#121215] ${className}`}>
+      <canvas
+        ref={canvasRef}
+        className="w-full h-full object-cover"
+      />
     </div>
   );
 };

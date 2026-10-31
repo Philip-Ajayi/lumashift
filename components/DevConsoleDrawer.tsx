@@ -1,7 +1,14 @@
+
 'use client';
 
 import React from 'react';
-import { Terminal, X, CheckCircle2, AlertTriangle, Info, Copy } from 'lucide-react';
+import {
+  Terminal,
+  X,
+  CheckCircle2,
+  AlertTriangle,
+  Info,
+} from 'lucide-react';
 
 interface DevConsoleDrawerProps {
   isOpen: boolean;
@@ -23,53 +30,78 @@ export const DevConsoleDrawer: React.FC<DevConsoleDrawerProps> = ({
 
   return (
     <aside
-      aria-label="Developer telemetry console"
-      className="fixed bottom-0 right-0 z-50 w-full sm:w-[500px] h-80 bg-zinc-950/95 border-t sm:border-l border-white/15 backdrop-blur-xl shadow-2xl flex flex-col font-mono text-xs"
+      aria-label="Activity log"
+      className="console-panel fixed bottom-0 right-0 z-50 w-full sm:w-[440px] h-[420px] flex flex-col rounded-t-2xl sm:rounded-tl-2xl"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-surface border-b border-white/10 text-zinc-300">
-        <div className="flex items-center gap-2">
-          <Terminal className="w-4 h-4 text-blue-400" />
-          <span className="font-semibold text-white">DevTools & API Telemetry</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">
-            {telemetryLog.length} events
-          </span>
+      <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.07]">
+        <div className="flex items-center gap-3">
+          <Terminal className="w-4 h-4 text-[#c9b28a]" />
+
+          <div>
+            <h3 className="text-sm font-medium text-white">
+              Activity
+            </h3>
+
+            <p className="text-[10px] text-zinc-500 mt-1">
+              {telemetryLog.length} recorded events
+            </p>
+          </div>
         </div>
+
         <button
           onClick={onClose}
-          className="p-1 hover:bg-zinc-800 rounded text-zinc-400 hover:text-white"
+          aria-label="Close activity"
+          className="button-quiet p-2 rounded-lg"
         >
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Log Feed */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-2.5 text-[11px]">
+      <div className="flex-1 overflow-y-auto px-5 py-2">
         {telemetryLog.length === 0 ? (
-          <div className="text-zinc-500 italic">No telemetry recorded yet. Trigger calibration to stream events.</div>
+          <div className="text-xs text-zinc-500 py-8 text-center">
+            Nothing here yet.
+          </div>
         ) : (
           telemetryLog.map((log, idx) => (
-            <div key={idx} className="flex items-start gap-2 leading-relaxed">
-              {log.status === 'ok' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />}
-              {log.status === 'warn' && <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />}
-              {log.status === 'info' && <Info className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />}
+            <div key={idx} className="console-event">
+              <div className="flex items-start gap-3">
+                {log.status === 'ok' && (
+                  <CheckCircle2 className="w-4 h-4 text-[#a8c7ad] shrink-0 mt-0.5" />
+                )}
 
-              <div className="flex-1">
-                <div className="flex items-center gap-2 text-zinc-400">
-                  <span className="text-zinc-200 font-bold">{log.step}</span>
-                  <span className="text-[10px] text-zinc-500">{log.durationMs}ms</span>
+                {log.status === 'warn' && (
+                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                )}
+
+                {log.status === 'info' && (
+                  <Info className="w-4 h-4 text-[#a6b9ff] shrink-0 mt-0.5" />
+                )}
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-xs font-medium text-zinc-200">
+                      {log.step}
+                    </p>
+
+                    <span className="text-[10px] text-zinc-500 font-mono shrink-0">
+                      {log.durationMs}ms
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-zinc-500 leading-5 mt-2">
+                    {log.detail}
+                  </p>
                 </div>
-                <div className="text-zinc-300 font-sans text-xs mt-0.5">{log.detail}</div>
               </div>
             </div>
           ))
         )}
       </div>
 
-      {/* Footer Benchmark */}
-      <div className="px-4 py-2 bg-surface border-t border-white/5 text-[10px] text-zinc-400 flex justify-between items-center">
-        <span>Latency target: &lt;4200ms</span>
-        <span className="text-emerald-400">Perfect Corp S2S Specs: PASS</span>
+      <div className="px-5 py-3 border-t border-white/[0.07] flex items-center justify-between text-[10px] text-zinc-500">
+        <span>Session activity</span>
+        <span>{telemetryLog.length} events</span>
       </div>
     </aside>
   );
