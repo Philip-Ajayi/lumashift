@@ -109,32 +109,39 @@ export class YouCamClient {
         ? 'matte'
         : 'satin';
 
-    // Formatted according to YouCam Makeup-VTO Effect Schema
+    // Strictly compliant with Perfect Corp /s2s/v2.0/task/makeup-vto schema:
     const effects: any[] = [
       {
         category: 'foundation',
-        color: compensation.foundation.hex,
-        colorIntensity: compensation.foundation.coverage,
-        glowIntensity: compensation.foundation.glow,
-        coverageIntensity: compensation.foundation.coverage,
+        palettes: [
+          {
+            color: compensation.foundation.hex,
+            colorIntensity: Math.round(compensation.foundation.coverage),
+            coverageIntensity: Math.round(compensation.foundation.coverage),
+            glowIntensity: Math.round(compensation.foundation.glow),
+          },
+        ],
       },
       {
         category: 'lip_color',
+        shape: { name: 'original' },
+        style: { type: 'full' },
         palettes: [
           {
             color: compensation.lip.hex,
             texture: lipFinish,
-            colorIntensity: compensation.lip.intensity,
+            colorIntensity: Math.round(compensation.lip.intensity),
           },
         ],
       },
       {
         category: 'blush',
+        pattern: { name: '1color1' },
         palettes: [
           {
             color: compensation.blush.hex,
-            texture: 'satin',
-            colorIntensity: compensation.blush.intensity,
+            texture: 'matte',
+            colorIntensity: Math.round(compensation.blush.intensity),
           },
         ],
       },
@@ -147,7 +154,6 @@ export class YouCamClient {
 
     if (imageIdentifier.fileId) {
       payload.src_file_id = imageIdentifier.fileId;
-      payload.file_id = imageIdentifier.fileId;
     } else if (imageIdentifier.imageUrl) {
       payload.src_file_url = imageIdentifier.imageUrl;
     }
